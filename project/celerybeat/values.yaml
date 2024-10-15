@@ -1,0 +1,24 @@
+replicaCount: 1
+
+image:
+  repository: andreyab404/mainapp
+  tag: "1.9"
+  pullPolicy: IfNotPresent
+
+resources:
+  limits:
+    memory: 128Mi
+  requests:
+    memory: 32Mi
+    cpu: 100m
+
+env:
+  
+  CELERY_BROKER_URL: redis://redis-master:6379/0
+
+command:
+  - celery
+  - -A
+  - app.celery_config
+  - beat
+  - --loglevel=info

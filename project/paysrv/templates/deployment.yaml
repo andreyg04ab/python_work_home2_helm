@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Values.app.name }}
+  name: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.app.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.app.name }}
+    spec:
+      containers:
+        - env:
+            - name: AWS_ACCESS_KEY_ID
+              value: {{ .Values.env.AWS_ACCESS_KEY_ID | quote }}
+            - name: AWS_REGION
+              value: {{ .Values.env.AWS_REGION | quote }}
+            - name: AWS_SECRET_ACCESS_KEY
+              value: {{ .Values.env.AWS_SECRET_ACCESS_KEY | quote }}
+            - name: LOCALSTACK_URL
+              value: {{ .Values.env.LOCALSTACK_URL | quote }}
+            - name: PYTHONUNBUFFERED
+              value: {{ .Values.env.PYTHONUNBUFFERED | quote }}
+            - name: SQS_QUEUE_NAME
+              value: {{ .Values.env.SQS_QUEUE_NAME | quote }}
+            - name: SNS_TOPIC_NAME
+              value: {{ .Values.env.SNS_TOPIC_NAME | quote }}
+            - name: LOGGING_LEVEL
+              value: {{ .Values.env.LOGGING_LEVEL | quote }}  
+          image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+          name: {{ .Values.app.name }}
+          resources:
+            requests:
+              memory: {{ .Values.resources.requests.memory }}
+              cpu: {{ .Values.resources.requests.cpu }}
+            limits:
+              memory: {{ .Values.resources.limits.memory }}
+      restartPolicy: Always
+ 

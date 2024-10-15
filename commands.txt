@@ -1,0 +1,41 @@
+#============  minicub
+minikube start --driver=docker --cpus=4 --memory=max
+minikube addons enable metrics-server
+minikub stop
+minikube delete
+
+#===helm===
+helm install celerycron .
+helm uninstall celerycron
+helm upgrade celerycron .
+
+#---terraform----
+$env:Path += ";d:\install\terform" 
+#terraform init
+terraform plan
+terraform apply
+
+
+# ------add docker image
+docker login -u andreyab404
+docker build -f main_app/Dockerfile -t andreyab404/mainapp:1.8 .
+docker build -f price_app/Dockerfile -t andreyab404/pricepp:1.8 .
+docker build -f pay_srv/Dockerfile -t andreyab404/paysrv:1.8 .
+docker push andreyab404/mainapp:1.8
+docker push andreyab404/priceapp:1.8
+docker push andreyab404/paysrv:1.8
+
+#------load test---
+pip3 install locust
+minikube service mainapp --url
+locust --host=http://localhost:3000
+
+#------grafana---
+rate(app_requests_total{endpoint="/health"}[$__rate_interval])
+sum(rate(app_requests_total{endpoint="/health"}[$__rate_interval]))
+sum(rate(app_requests_total{http_status="404"}[$__rate_interval]))
+
+#==bit fluence log===
+aws --endpoint-url=http://localhost:4566 s3 cp s3://logs/fluent-bit/logs/2024-10-13T13:02/qEJz5LfY.log ./s3_data/log/log1.log
+
+

@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+  name: {{ .Chart.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command: 
+          {{- range .Values.command }}
+            - {{ . }}
+          {{- end }}
+          env:
+            - name: DATABASE_URL
+              value: {{ .Values.env.DATABASE_URL | quote }}
+            - name: REDIS_URL
+              value: {{ .Values.env.REDIS_URL | quote }}
+            - name: CELERY_BROKER_URL
+              value: {{ .Values.env.CELERY_BROKER_URL | quote }}
+            - name: AWS_REGION
+              value: {{ .Values.env.AWS_REGION | quote }}
+            - name: LOCALSTACK_URL
+              value: {{ .Values.env.LOCALSTACK_URL | quote }}
+            - name: AWS_ACCESS_KEY_ID
+              value: {{ .Values.env.AWS_ACCESS_KEY_ID | quote }}
+            - name: AWS_SECRET_ACCESS_KEY
+              value: {{ .Values.env.AWS_SECRET_ACCESS_KEY | quote }}
+            - name: S3_BUCKET_NAME
+              value: {{ .Values.env.S3_BUCKET_NAME | quote }}
+          resources:
+            limits:
+              memory: {{ .Values.resources.limits.memory }}
+            requests:
+              memory: {{ .Values.resources.requests.memory }}
+              cpu: {{ .Values.resources.requests.cpu }}
+      restartPolicy: Always

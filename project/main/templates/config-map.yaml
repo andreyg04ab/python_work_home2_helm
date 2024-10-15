@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  labels:
+    app: fluent-bit
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        Flush        1
+        Log_Level    info
+
+    @INCLUDE input-fluent.conf
+    @INCLUDE output-s3.conf
+  input-fluent.conf: |
+    [INPUT]
+        Name              forward
+        Listen            0.0.0.0
+        Port              24224
+        Tag               mainapp
+
+  output-s3.conf: |
+    [OUTPUT]
+        Name              s3
+        Match             mainapp
+        bucket            logs
+        endpoint          http://localstack:4566  # LocalStack endpoint
+        region            {{ .Values.env.AWS_REGION }}
+        total_file_size   1M
+        upload_timeout    3m
+        use_put_object    On
+        s3_key_format     /fluent-bit/logs/%Y-%m-%dT%H:%M/$UUID.log
+        s3_key_format_tag_delimiters .-

@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  {{ .Chart.Name }} 
+  labels:
+    app: {{ .Chart.Name }} 
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }} 
+  template:
+    metadata:
+        labels:
+           app: {{ .Chart.Name }} 
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}-app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          env:
+            - name: PORT
+              value: {{ .Values.env.PORT  | quote }} 
+            - name: DATABASE_URL
+              value: {{ .Values.env.DATABASE_URL  | quote  }}               
+            - name: REDIS_URL
+              value: {{ .Values.env.REDIS_URL  | quote }}               
+            - name: PRICE_URL
+              value: {{ .Values.env.PRICE_URL  | quote }}                                           
+            - name: COORD_URL
+              value: {{ .Values.env.COORD_URL  | quote }}                                                         
+            - name: COUNT_ORD
+              value: {{ .Values.env.COUNT_ORD  | quote }}                                                         
+            - name: RABBITMQ_URL
+              value: {{ .Values.env.RABBITMQ_URL  | quote }}                                                         
+            - name: RABBITMQ_RE_COUNT
+              value: {{ .Values.env.RABBITMQ_RE_COUNT  | quote }}                                                         
+            - name: CELERY_BROKER_URL
+              value: {{ .Values.env.CELERY_BROKER_URL  | quote }}                                                         
+            - name: AWS_REGION
+              value: {{ .Values.env.AWS_REGION  | quote }}                                                         
+            - name: LOCALSTACK_URL
+              value: {{ .Values.env.LOCALSTACK_URL  | quote }}                                                         
+            - name: AWS_ACCESS_KEY_ID
+              value: {{ .Values.env.AWS_ACCESS_KEY_ID  | quote }}                                                         
+            - name: AWS_SECRET_ACCESS_KEY
+              value: {{ .Values.env.AWS_SECRET_ACCESS_KEY  | quote }}                                                         
+            - name: SQS_QUEUE_NAME
+              value: {{ .Values.env.SQS_QUEUE_NAME  | quote }}                                                         
+            - name: SNS_TOPIC_NAME
+              value: {{ .Values.env.SNS_TOPIC_NAME  | quote }}                                                         
+            - name: LOGGING_LEVEL
+              value: {{ .Values.env.LOGGING_LEVEL | quote }}
+            - name: SNS_ENDPOINT
+              value: {{ .Values.env.SNS_ENDPOINT | quote }}              
+
+          ports:
+            - containerPort: {{ .Values.service.port }}
+              protocol: TCP
+              name: metrics-port 
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }} 
+          resources:
+             limits:
+              memory: {{ .Values.resources.limits.memory }}
+             requests:
+              memory: {{ .Values.resources.requests.memory }}
+              cpu: {{ .Values.resources.requests.cpu }} 
+
+        - name: fluent-bit
+          image: cr.fluentbit.io/fluent/fluent-bit:3.1.8
+          volumeMounts:
+            - name: config-volume
+              mountPath: /fluent-bit/etc
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              value: {{ .Values.env.AWS_ACCESS_KEY_ID | quote }}
+            - name: AWS_SECRET_ACCESS_KEY
+              value: {{ .Values.env.AWS_SECRET_ACCESS_KEY | quote }}
+            - name: AWS_REGION
+              value: {{ .Values.env.AWS_REGION | quote }}
+          resources:
+            limits:
+              memory: {{ .Values.resources.limits.memory }}
+            requests:
+              memory: {{ .Values.resources.requests.memory }}
+              cpu: {{ .Values.resources.requests.cpu }}       
+      restartPolicy: Always
+
+      volumes:
+        - name: config-volume
+          configMap:
+            name: fluent-bit-config 

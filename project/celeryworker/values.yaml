@@ -1,0 +1,39 @@
+replicaCount: 1
+
+image:
+  repository: andreyab404/mainapp
+  tag: "1.9"
+  pullPolicy: IfNotPresent
+
+resources:
+  limits:
+    memory: 128Mi
+  requests:
+    memory: 32Mi
+    cpu: 100m
+
+env:
+  DATABASE_URL: postgresql://user1:pass1@postgresl-postgresql:5432/dz_base1
+  REDIS_URL: redis://redis-master:6379/1
+  PRICE_URL: http://priceapp:3001/price/
+  COORD_URL: http://priceapp:3001/coord/
+  COUNT_ORD: 3
+  CELERY_BROKER_URL: redis://redis-master:6379/0
+  AWS_REGION: eu-west-1
+  LOCALSTACK_URL: http://localstack:4566
+  AWS_ACCESS_KEY_ID: dummy
+  AWS_SECRET_ACCESS_KEY: dummy
+  SQS_QUEUE_NAME: pay_queue
+  SNS_TOPIC_NAME: PayTopic 
+  LOGGING_LEVEL: DEBUG
+  SNS_ENDPOINT: http://mainapp:3003/pay/status
+
+command:
+  - celery
+  - -A
+  - app.celery_config
+  - worker
+  - --pool=gevent
+  - --loglevel=info
+  - -Q
+  - default

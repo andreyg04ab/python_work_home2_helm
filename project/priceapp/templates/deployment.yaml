@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+  name: {{ .Chart.Name }}
+
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }} 
+  template:
+    metadata:
+        labels:
+           app: {{ .Chart.Name }} 
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}-app
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          env:
+            - name: PORT
+              value: {{ .Values.env.PORT  | quote }} 
+            - name: REDIS_URL
+              value: {{ .Values.env.REDIS_URL  | quote  }}               
+            - name: COORDINATE_URL
+              value: {{ .Values.env.COORDINATE_URL  | quote }}               
+            - name: COORDINATE_USER
+              value: {{ .Values.env.COORDINATE_USER  | quote }}                                           
+
+          ports:
+            - containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.livenessProbe.failureThreshold }} 
+          resources:
+             limits:
+              memory: {{ .Values.resources.limits.memory }}
+             requests:
+              memory: {{ .Values.resources.requests.memory }}
+              cpu: {{ .Values.resources.requests.cpu }} 
+      restartPolicy: Always

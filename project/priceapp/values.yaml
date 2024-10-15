@@ -1,0 +1,48 @@
+
+replicaCount: 1
+
+image:
+  repository: andreyab404/priceapp
+  pullPolicy: IfNotPresent
+  tag: "1.8"
+
+service:
+  type: ClusterIP
+  port: 3001
+
+
+ingress:
+  enabled: false
+
+resources: 
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 32Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 30
+
+
+readinessProbe:
+  initialDelaySeconds: 20
+  periodSeconds: 5
+  timeoutSeconds: 7
+  failureThreshold: 3
+
+livenessProbe:
+  initialDelaySecons: 20
+  periodSeconds: 5
+  timeoutSeconds: 7
+  failureThreshold: 3
+
+env:
+  PORT: 3001
+  REDIS_URL: redis://redis-master:6379/1
+  COORDINATE_URL: http://api.geonames.org/geoCodeAddressJSON
+  COORDINATE_USER: andrey.ab 

@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: {{ .Chart.Name }}
+  name: {{ .Chart.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command: 
+          {{- range .Values.command }}
+            - {{ . | quote }}
+          {{- end }}
+          env:
+            - name: CELERY_BROKER_URL
+              value: {{ .Values.env.CELERY_BROKER_URL | quote }}
+         
+          resources:
+            limits:
+              memory: {{ .Values.resources.limits.memory }}
+            requests:
+              memory: {{ .Values.resources.requests.memory }}
+              cpu: {{ .Values.resources.requests.cpu }}
+      restartPolicy: Always
